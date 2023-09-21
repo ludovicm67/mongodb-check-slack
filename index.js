@@ -137,7 +137,7 @@ const pingServer = async () => {
   }
 };
 
-// Ping the server every `pingInterval` miliseconds
+// Ping the server every `pingInterval` milliseconds
 setInterval(async () => {
   await pingServer();
 }, pingInterval);
