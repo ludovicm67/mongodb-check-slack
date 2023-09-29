@@ -40,10 +40,10 @@ const slackClient = new WebClient(slackToken);
 
 // Create a new MongoClient
 const client = new MongoClient(uri, {
-  connectTimeoutMS: 200,
-  socketTimeoutMS: 200,
-  waitQueueTimeoutMS: 200,
-  maxIdleTimeMS: 200,
+  connectTimeoutMS: 400,
+  socketTimeoutMS: 400,
+  waitQueueTimeoutMS: 400,
+  maxIdleTimeMS: 400,
 });
 
 // Create HTTP server
