@@ -1,3 +1,4 @@
+//@ts-check
 import "dotenv/config";
 import { MongoClient } from "mongodb";
 import { WebClient } from "@slack/web-api";
@@ -6,7 +7,7 @@ import Fastify from "fastify";
 /**
  * Check if the value is defined and return the default value if not as boolean.
  *
- * @param {string} value
+ * @param {string | undefined} value
  * @param {boolean} defaultValue
  * @returns {boolean}
  */

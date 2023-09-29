@@ -11,3 +11,5 @@ This application can be configured using the following environment variables:
 - `VERBOSE_MODE`: The verbose mode, if set to `"true"`, will print the result of each check in the logs (default: `"false"`)
 - `SHOW_ERRORS`: If set to `"true"`; it will display more details to the error in the logs (default: `"true"`)
 - `PING_INTERVAL`: The interval of time in milliseconds where the ping to the MongoDB instance is done (default: `"1000"`)
+- `SLACK_TOKEN`: The Slack token used to send messages to Slack (default: `"secret-token"`)
+- `SLACK_CHANNEL`: The Slack channel where the messages will be sent (default: `"mongo-alerts"`)
