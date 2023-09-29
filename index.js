@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { MongoClient } from "mongodb";
+import { WebClient } from "@slack/web-api";
 import Fastify from "fastify";
 
 /**
@@ -31,6 +32,10 @@ const verboseMode = definedBolean(process.env.VERBOSE_MODE, false);
 const showErrors = definedBolean(process.env.SHOW_ERRORS, true);
 const pingIntervalConfig = process.env.PING_INTERVAL || "1000";
 const pingInterval = parseInt(pingIntervalConfig, 10);
+const slackToken = process.env.SLACK_TOKEN || "secret-token";
+const slackChannel = process.env.SLACK_CHANNEL || "mongo-alerts";
+
+const slackClient = new WebClient(slackToken);
 
 // Create a new MongoClient
 const client = new MongoClient(uri, {
@@ -96,10 +101,22 @@ const verboseLog = (msg) => {
 /**
  * Send the alert to Slack.
  */
-const sendToSlack = () => {
+const sendToSlack = async () => {
   log(`ALERT - sent alert on Slack: ${lastState}`);
 
-  // TODO: send the alert to Slack
+  await slackClient.chat.postMessage({
+    blocks: [
+      {
+        text: {
+          text: lastState,
+          type: "mrkdwn"
+        },
+        type: "section"
+      }
+    ],
+    text: lastState,
+    channel: slackChannel,
+  });
 };
 
 /**
@@ -133,7 +150,7 @@ const pingServer = async () => {
   if (lastState !== message) {
     lastState = message;
     lastChange = new Date().toISOString();
-    sendToSlack();
+    await sendToSlack();
   }
 };
 
