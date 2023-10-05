@@ -33,7 +33,7 @@ const waitQueueTimeoutConfig = process.env.WAIT_QUEUE_TIMEOUT || timeoutConfig;
 const waitQueueTimeout = parseInt(waitQueueTimeoutConfig, 10);
 
 // Configuration: timeout for MongoDB to close an idle connection (in milliseconds)
-const maxIdleTimeConfig = process.env.CONNECT_TIMEOUT || timeoutConfig;
+const maxIdleTimeConfig = process.env.MAX_IDLE_TIME || timeoutConfig;
 const maxIdleTime = parseInt(maxIdleTimeConfig, 10);
 
 const slackClient = new WebClient(slackToken);
