@@ -3,47 +3,47 @@ import "dotenv/config";
 import { MongoClient } from "mongodb";
 import { WebClient } from "@slack/web-api";
 import Fastify from "fastify";
+import { definedBolean, log, promiseWithTimeout } from "./utils.js";
 
-/**
- * Check if the value is defined and return the default value if not as boolean.
- *
- * @param {string | undefined} value
- * @param {boolean} defaultValue
- * @returns {boolean}
- */
-const definedBolean = (value, defaultValue) => {
-  if (value === undefined) {
-    return defaultValue;
-  }
-
-  if (value === "true") {
-    return true;
-  }
-
-  if (value === "false") {
-    return false;
-  }
-
-  return defaultValue;
-}
-
-// Configuration
+// Configuration: general options
 const uri = process.env.MONGODB_URI || "mongodb://localhost:27017";
 const verboseMode = definedBolean(process.env.VERBOSE_MODE, false);
 const showErrors = definedBolean(process.env.SHOW_ERRORS, true);
 const pingIntervalConfig = process.env.PING_INTERVAL || "1000";
 const pingInterval = parseInt(pingIntervalConfig, 10);
+
+// Configuration: Slack
 const slackToken = process.env.SLACK_TOKEN || "secret-token";
 const slackChannel = process.env.SLACK_CHANNEL || "mongo-alerts";
+
+// Configuration: timeout to perform MongoDB commands (in milliseconds)
+const timeoutConfig = process.env.TIMEOUT || "800";
+const timeout = parseInt(timeoutConfig, 10);
+
+// Configuration: timeout to connect to MongoDB (in milliseconds)
+const connectTimeoutConfig = process.env.CONNECT_TIMEOUT || timeoutConfig;
+const connectTimeout = parseInt(connectTimeoutConfig, 10);
+
+// Configuration: timeout for MongoDB socket (in milliseconds)
+const socketTimeoutConfig = process.env.SOCKET_TIMEOUT || timeoutConfig;
+const socketTimeout = parseInt(socketTimeoutConfig, 10);
+
+// Configuration: timeout for MongoDB to get an available thread (in milliseconds)
+const waitQueueTimeoutConfig = process.env.WAIT_QUEUE_TIMEOUT || timeoutConfig;
+const waitQueueTimeout = parseInt(waitQueueTimeoutConfig, 10);
+
+// Configuration: timeout for MongoDB to close an idle connection (in milliseconds)
+const maxIdleTimeConfig = process.env.CONNECT_TIMEOUT || timeoutConfig;
+const maxIdleTime = parseInt(maxIdleTimeConfig, 10);
 
 const slackClient = new WebClient(slackToken);
 
 // Create a new MongoClient
 const client = new MongoClient(uri, {
-  connectTimeoutMS: 400,
-  socketTimeoutMS: 400,
-  waitQueueTimeoutMS: 400,
-  maxIdleTimeMS: 400,
+  connectTimeoutMS: connectTimeout,
+  socketTimeoutMS: socketTimeout,
+  waitQueueTimeoutMS: waitQueueTimeout,
+  maxIdleTimeMS: maxIdleTime,
 });
 
 // Create HTTP server
@@ -51,40 +51,10 @@ const fastify = Fastify({
   logger: true
 });
 
-
+// Internal state
 let lastState = undefined;
 let lastCheck = undefined;
 let lastChange = undefined;
-
-/**
- * Create a promise that rejects after the specified timeout.
- *
- * @param {Promise} promise
- * @param {number} timeout
- * @returns {Promise}
- */
-const promiseWithTimeout = (promise, timeout) => {
-  // Create a promise that rejects after the specified timeout
-  const timeoutPromise = new Promise((_resolve, reject) => {
-    setTimeout(() => {
-      reject(new Error("Timed out."));
-    }, timeout);
-  });
-
-  // Race the original promise with the timeout promise
-  return Promise.race([promise, timeoutPromise]);
-}
-
-/**
- * Display a log line.
- *
- * @param {string} msg The message to display in the logs.
- */
-const log = (msg) => {
-  const now = new Date();
-  const date = now.toUTCString();
-  console.log(`${date} - ${msg}`);
-}
 
 /**
  * Display a log line if we are on verbose mode.
@@ -129,8 +99,8 @@ const pingServer = async () => {
   lastCheck = new Date().toISOString();
 
   try {
-    await promiseWithTimeout(client.connect(), 500);
-    await promiseWithTimeout(client.db("admin").command({ ping: 1 }), 500);
+    await promiseWithTimeout(client.connect(), timeout);
+    await promiseWithTimeout(client.db("admin").command({ ping: 1 }), timeout);
     message = "OK - successful ping";
     verboseLog(message);
   } catch (e) {
